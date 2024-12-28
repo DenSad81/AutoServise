@@ -52,43 +52,54 @@ public class AutoServis
 
             if (Utils.ReadBool("Repair car? Y/N"))
             {
-                bool isChangeDetal = true;
+                if (_cars[0].TryGetCopyOfFirstBrokenDetail(out Detail temp) == true)
+                {                 
+                    bool isChangeDetal = true;
 
-                while (isChangeDetal)
-                {
-                    Detail detail = _cars[0].GetCopyOfFirstBrokenDetail;
-                    int detailId = detail.Id;
-                    detail.ShowStats();
-
-                    if (Utils.ReadBool("Change detal? Y/N"))
+                    while (isChangeDetal)
                     {
-                        if (_storeHouse.CheckIfDetalPresentById(detailId, out int prisePerDetal, out int prisePerChange))
-                        {
-                            if (_cars[0].TruRepairFirstBrokenDetail(prisePerDetal, prisePerChange))
-                            {
-                                if (_storeHouse.TryBuyDetalById(detailId))
-                                {
-                                    _money += (prisePerDetal + prisePerChange);
+                        _cars[0].TryGetCopyOfFirstBrokenDetail(out Detail detail);
+                        int detailId = detail.Id;
+                        detail.ShowStats();
 
-                                    if (_cars[0].QuantityBrokenDetails == 0)
+                        if (Utils.ReadBool("Change detal? Y/N"))
+                        {
+                            if (_storeHouse.CheckIfDetalPresentById(detailId, out int prisePerDetal, out int prisePerChange))
+                            {
+                                if (_cars[0].TruRepairFirstBrokenDetail(prisePerDetal, prisePerChange))
+                                {
+                                    if (_storeHouse.TryBuyDetalById(detailId))
                                     {
-                                        _cars[0].ShowStats();
-                                        _cars.RemoveAt(0);
-                                        isChangeDetal = false;
+                                        _money += (prisePerDetal + prisePerChange);
+
+                                        if (_cars[0].QuantityBrokenDetails == 0)
+                                        {
+                                            _cars[0].ShowStats();
+                                            _cars.RemoveAt(0);
+                                            isChangeDetal = false;
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                    else
-                    {
-                        int fine = _cars[0].SummAllBrokenDetails;
-                        _cars[0].GetFine(fine);
-                        _money += fine;
+                        else
+                        {
+                            int fine = _cars[0].SummAllBrokenDetails;
+                            _cars[0].GetFine(fine);
+                            _money += fine;
 
-                        _cars.RemoveAt(0);
-                        isChangeDetal = false;
+                            _cars.RemoveAt(0);
+                            isChangeDetal = false;
+                        }
                     }
+                }
+                else
+                {
+                    Console.WriteLine("Broken details is not present");
+                    _cars[0].GetFine(100);
+                    _money += 100;
+
+                    _cars.RemoveAt(0);
                 }
             }
             else
@@ -161,28 +172,25 @@ public class DetailAndQuality : Detail
 {
     public DetailAndQuality(int type, int prise, int prisePerChange, bool quality) : base(type, prise, prisePerChange)
     {
-        Quality = quality;
+        IsGoodQuality = quality;
     }
 
     public DetailAndQuality(Detail detail, bool quality) : base(detail.Id, detail.Prise, detail.PrisePerChange)
     {
-        Quality = quality;
+        IsGoodQuality = quality;
     }
 
-    public bool Quality { get; private set; }
+    public bool IsGoodQuality { get; private set; }
 
     public DetailAndQuality Clone() =>
-        new DetailAndQuality(Id, Prise, PrisePerChange, Quality);
+        new DetailAndQuality(Id, Prise, PrisePerChange, IsGoodQuality);
 
     public override void ShowStats() =>
-    Console.WriteLine($"Type of detail: {Id}  Prise: {Prise}  Prise per change: {PrisePerChange}  Quality: {Quality}");
+    Console.WriteLine($"Type of detail: {Id}  Prise: {Prise}  Prise per change: {PrisePerChange}  Quality: {IsGoodQuality}");
 
     public void RepeirDetal()
-        => Quality = true;
+        => IsGoodQuality = true;
 }
-
-
-
 
 public class DetailList
 {
@@ -221,53 +229,6 @@ public class DetailList
         return details;
     }
 }
-
-//public class StoreHouse
-//{
-//    private List<Detail> _details;
-//    private List<int> _quantityEachDetails;
-
-//    public StoreHouse(DetailList detailList, int quantityDetailsPerPosition = 11)
-//    {
-//        _details = detailList.GetAllDetails();
-//        _quantityEachDetails = new List<int>(_details.Count);
-
-//        for (int i = 0; i < _details.Count; i++)
-//            _quantityEachDetails.Add(quantityDetailsPerPosition);
-//    }
-
-//    public bool CheckIfDetalPresentById(int id, out int prisePerDetal, out int prisePerChange)
-//    {
-//        prisePerDetal = 0;
-//        prisePerChange = 0;
-
-//        for (int i = 0; i < _details.Count; i++)
-//        {
-//            if (_details[i].Id == id)
-//            {
-//                if (_quantityEachDetails[i] > 0)
-//                {
-//                    prisePerDetal = _details[i].Prise;
-//                    prisePerChange = _details[i].PrisePerChange;
-//                    return true;
-//                }
-//            }
-//        }
-
-//        return false;
-//    }
-
-//    public bool TryBuyDetalById(int id)
-//    {
-//        if (_quantityEachDetails[id] > 0)
-//        {
-//            _quantityEachDetails[id]--;
-//            return true;
-//        }
-
-//        return false;
-//    }
-//}
 
 public class StoreHouse
 {
@@ -330,50 +291,11 @@ public class StoreHouse
     }
 }
 
-
-
-
-
-
-//public class CarMaker
-//{
-//    private int _quantityCars = 11;
-//    private int _minQuantityBrokenDetailsPerCar = 2;
-//    private int _maxQuantityBrokenDetailsPerCar = 6;
-//    private DetailList _detailList;
-
-//    public CarMaker(DetailList detailList)
-//    {
-//        _detailList = detailList;
-//    }
-
-//    public List<Car> CreateCars()
-//    {
-//        List<Car> cars = new List<Car>();
-
-//        for (int i = 0; i < _quantityCars; i++)
-//            cars.Add(CreateCar(i));
-
-//        return cars;
-//    }
-
-//    private Car CreateCar(int id)
-//    {
-//        int quantityDetails = Utils.GenerateRandomInt(_minQuantityBrokenDetailsPerCar, _maxQuantityBrokenDetailsPerCar);
-//        List<Detail> details = new List<Detail>();
-
-//        for (int i = 0; i < quantityDetails; i++)
-//            details.Add(_detailList.GetRandomDetail());
-
-//        return new Car(id, details);
-//    }
-//}
-
 public class CarMaker
 {
-    private int _quantityCars = 3;
-    private int _minQuantityBrokenDetailsPerCar = 2;
-    private int _maxQuantityBrokenDetailsPerCar = 6;
+    private int _quantityCars = 9;
+    private int _minQuantityDetailsPerCar = 2;
+    private int _maxQuantityDetailsPerCar = 6;
     private DetailList _detailList;
 
     public CarMaker(DetailList detailList)
@@ -393,7 +315,7 @@ public class CarMaker
 
     private Car CreateCar(int carId = 0)
     {
-        int quantityDetails = Utils.GenerateRandomInt(_minQuantityBrokenDetailsPerCar, _maxQuantityBrokenDetailsPerCar);
+        int quantityDetails = Utils.GenerateRandomInt(_minQuantityDetailsPerCar, _maxQuantityDetailsPerCar);
         List<DetailAndQuality> details = new List<DetailAndQuality>();
 
         for (int i = 0; i < quantityDetails; i++)
@@ -405,73 +327,6 @@ public class CarMaker
         return new Car(carId, details);
     }
 }
-
-//public class Car
-//{
-//    private List<Detail> _brokenDetails;
-//    private int _money = 1000;
-
-//    public Car(int id, List<Detail> details)
-//    {
-//        Id = id;
-//        _brokenDetails = details;
-//    }
-
-//    public int Id { get; }
-
-//    public int QuantityBrokenDetails => _brokenDetails.Count;
-
-//    public Detail GetCopyOfFirstBrokenDetail
-//    {
-//        get
-//        {
-//            if (QuantityBrokenDetails == 0)
-//                return null;
-
-//            return _brokenDetails[0].Clone();
-//        }
-//    }
-
-//    public int SummAllBrokenDetails
-//    {
-//        get
-//        {
-//            int sum = 0;
-
-//            foreach (var brokenDetail in _brokenDetails)
-//                sum += brokenDetail.Prise;
-
-//            return sum;
-//        }
-//    }
-
-//    public bool TruRepairFirstBrokenDetail(int prisePerDetal, int prisePerChange)
-//    {
-//        int money = _money;
-
-//        if (money - (prisePerDetal + prisePerChange) >= 0)
-//        {
-//            _money -= (prisePerDetal + prisePerChange);
-//            _brokenDetails.RemoveAt(0);
-//            return true;
-//        }
-
-//        return false;
-//    }
-
-//    public void GetFine(int fine) =>
-//        _money -= fine;
-
-//    public void ShowStats()
-//    {
-//        Console.WriteLine($"ID car: {Id}  Ballance: {_money}");
-
-//        foreach (var brokenDetail in _brokenDetails)
-//            brokenDetail.ShowStats();
-//    }
-//}
-
-
 
 public class Car
 {
@@ -493,26 +348,11 @@ public class Car
             int quantityBrokenDetails = 0;
             foreach (var detail in _details)
             {
-                if (detail.Quality == false)
+                if (detail.IsGoodQuality == false)
                     quantityBrokenDetails++;
             }
 
             return quantityBrokenDetails;
-        }
-    }
-
-    public Detail GetCopyOfFirstBrokenDetail
-    {
-        get
-        {
-            foreach (var detail in _details)
-            {
-                if (detail.Quality == false)
-                    return detail.Clone();
-            }
-
-            Console.WriteLine("Broken detail is not present");
-            return null;
         }
     }
 
@@ -529,13 +369,30 @@ public class Car
         }
     }
 
+    public bool TryGetCopyOfFirstBrokenDetail(out Detail detailOut)
+    {
+        detailOut = null;
+
+        foreach (var detail in _details)
+        {
+            if (detail.IsGoodQuality == false)
+            {
+                detailOut = detail.Clone();
+                return true;
+            }
+        }
+
+        Console.WriteLine("Broken detail is not present");
+        return false;
+    }
+
     public bool TruRepairFirstBrokenDetail(int prisePerDetal, int prisePerChange)
     {
         int money = _money;
 
         foreach (var detail in _details)
         {
-            if (detail.Quality == false)
+            if (detail.IsGoodQuality == false)
             {
                 if (money - (prisePerDetal + prisePerChange) >= 0)
                 {
