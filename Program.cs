@@ -11,19 +11,12 @@ class Program
         int qyantityDetails = 111;
         DetailList detailList = new DetailList(qyantityDetails);
         StoreHouse storeHouse = new StoreHouse(detailList);
-
         CarMaker carMaker = new CarMaker(detailList);
-
-
-        // storeHouse.ShowStats();
 
         List<Car> cars = carMaker.CreateCars();
 
-
         foreach (var car in cars)
             car.ShowStats();
-
-
 
         AutoServis autoServis = new AutoServis(storeHouse, cars);
         autoServis.Play();
@@ -34,6 +27,7 @@ public class AutoServis
 {
     private int _money = 0;
     private int _fine = 300;
+    private int _monyForDiagnostics = 100;
     private StoreHouse _storeHouse;
     private List<Car> _cars;
 
@@ -53,7 +47,7 @@ public class AutoServis
             if (Utils.ReadBool("Repair car? Y/N"))
             {
                 if (_cars[0].TryGetCopyOfFirstBrokenDetail(out Detail temp) == true)
-                {                 
+                {
                     bool isChangeDetal = true;
 
                     while (isChangeDetal)
@@ -64,31 +58,12 @@ public class AutoServis
 
                         if (Utils.ReadBool("Change detal? Y/N"))
                         {
-                            if (_storeHouse.CheckIfDetalPresentById(detailId, out int prisePerDetal, out int prisePerChange))
-                            {
-                                if (_cars[0].TruRepairFirstBrokenDetail(prisePerDetal, prisePerChange))
-                                {
-                                    if (_storeHouse.TryBuyDetalById(detailId))
-                                    {
-                                        _money += (prisePerDetal + prisePerChange);
-
-                                        if (_cars[0].QuantityBrokenDetails == 0)
-                                        {
-                                            _cars[0].ShowStats();
-                                            _cars.RemoveAt(0);
-                                            isChangeDetal = false;
-                                        }
-                                    }
-                                }
-                            }
+                            if (ChangeDetail(detailId))
+                                isChangeDetal = false;
                         }
                         else
                         {
-                            int fine = _cars[0].SummAllBrokenDetails;
-                            _cars[0].GetFine(fine);
-                            _money += fine;
-
-                            _cars.RemoveAt(0);
+                            NotChangeDetail(_cars[0].SummAllBrokenDetails);
                             isChangeDetal = false;
                         }
                     }
@@ -96,20 +71,44 @@ public class AutoServis
                 else
                 {
                     Console.WriteLine("Broken details is not present");
-                    _cars[0].GetFine(100);
-                    _money += 100;
-
-                    _cars.RemoveAt(0);
+                    NotChangeDetail(_monyForDiagnostics);
                 }
             }
             else
             {
-                _cars[0].GetFine(_fine);
-                _money += _fine;
-
-                _cars.RemoveAt(0);
+                NotChangeDetail(_fine);
             }
         }
+    }
+
+    private bool ChangeDetail(int detailId)
+    {
+        if (_storeHouse.CheckIfDetalPresentById(detailId, out int prisePerDetal, out int prisePerChange))
+        {
+            if (_cars[0].TruRepairFirstBrokenDetail(prisePerDetal, prisePerChange))
+            {
+                if (_storeHouse.TryBuyDetalById(detailId))
+                {
+                    _money += (prisePerDetal + prisePerChange);
+
+                    if (_cars[0].QuantityBrokenDetails == 0)
+                    {
+                        _cars[0].ShowStats();
+                        _cars.RemoveAt(0);
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private void NotChangeDetail(int fine)
+    {
+        _cars[0].GetFine(fine);
+        _money += fine;
+        _cars.RemoveAt(0);
     }
 
     private void ShowStats() =>
@@ -293,7 +292,7 @@ public class StoreHouse
 
 public class CarMaker
 {
-    private int _quantityCars = 9;
+    private int _quantityCars = 2;
     private int _minQuantityDetailsPerCar = 2;
     private int _maxQuantityDetailsPerCar = 6;
     private DetailList _detailList;
