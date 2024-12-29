@@ -39,15 +39,15 @@ public class AutoServis
 
     public void Play()
     {
-        const string Y = "y";
-        const string N = "n";
+        const string Accept = "y";
+        const string NotAccept = "n";
 
         while (_cars.Count > 0)
         {
             this.ShowStats();
             _cars.Peek().ShowStats();
 
-            if (Utils.ReadBool("Repair car? Y/N", Y, N))
+            if (Utils.ReadBool("Repair car? Y/N", Accept, NotAccept))
             {
                 if (_cars.Peek().TryGetCopyOfFirstBrokenDetail(out Detail temp) == true)
                 {
@@ -59,7 +59,7 @@ public class AutoServis
                         int detailId = detail.Id;
                         detail.ShowStats();
 
-                        if (Utils.ReadBool("Change detal? Y/N", Y, N))
+                        if (Utils.ReadBool("Change detal? Y/N", Accept, NotAccept))
                         {
                             if (ChangeDetail(detailId))
                                 isChangeDetal = false;
@@ -122,11 +122,9 @@ public class AutoServis
                     car.AddDetail(new DetailAndQuality(newDetail, true));
                     return true;
                 }
-                else
-                {
-                    Console.WriteLine("Money not enaf for repering first broken detail");
-                    return false;
-                }
+
+                Console.WriteLine("Money not enaf for repering first broken detail");
+                return false;
             }
         }
 
@@ -139,7 +137,7 @@ public class AutoServis
         _money -= fine;
         _cars.Dequeue();
     }
-   
+
     private void ShowStats() =>
         Console.WriteLine($"Ballance autoservis {_money}  Quantity car in enqique {_cars.Count}");
 }
@@ -178,7 +176,7 @@ public class DetailAndQuantity : Detail
 
     public int Quantity { get; private set; }
 
-    public DetailAndQuantity Clone() =>
+    public new DetailAndQuantity Clone() =>
         new DetailAndQuantity(Id, Prise, PrisePerChange, Quantity);
 
     public bool DecreaseQuantity()
@@ -210,7 +208,7 @@ public class DetailAndQuality : Detail
 
     public bool IsGoodQuality { get; private set; }
 
-    public DetailAndQuality Clone() =>
+    public new DetailAndQuality Clone() =>
         new DetailAndQuality(Id, Prise, PrisePerChange, IsGoodQuality);
 
     public override void ShowStats() =>
@@ -230,12 +228,6 @@ public class DetailList
 
             _details.Add(new Detail(i, prise, prisePerChange));
         }
-    }
-
-    public void ShowDetails()
-    {
-        foreach (var detail in _details)
-            detail.ShowStats();
     }
 
     public Detail GetRandomDetail()
@@ -314,12 +306,6 @@ public class StoreHouse
         }
 
         return false;
-    }
-
-    public void ShowStats()
-    {
-        foreach (var item in _details)
-            item.ShowStats();
     }
 }
 
