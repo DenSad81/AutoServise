@@ -12,18 +12,14 @@ class Program
         DetailList detailList = new DetailList(qyantityDetails);
         StoreHouse storeHouse = new StoreHouse(detailList);
         CarMaker carMaker = new CarMaker(detailList);
-
         List<Car> cars = carMaker.CreateCars();
+        AutoService autoService = new AutoService(storeHouse, cars);
 
-        foreach (var car in cars)
-            car.ShowStats();
-
-        AutoServis autoServis = new AutoServis(storeHouse, cars);
-        autoServis.Play();
+        autoService.Play();
     }
 }
 
-public class AutoServis
+public class AutoService
 {
     private int _money = 0;
     private int _fine = 300;
@@ -31,7 +27,7 @@ public class AutoServis
     private StoreHouse _storeHouse;
     private Queue<Car> _cars;
 
-    public AutoServis(StoreHouse storeHouse, List<Car> cars)
+    public AutoService(StoreHouse storeHouse, List<Car> cars)
     {
         _storeHouse = storeHouse;
         _cars = new Queue<Car>(cars);
@@ -42,9 +38,12 @@ public class AutoServis
         const string Accept = "y";
         const string NotAccept = "n";
 
+        foreach (var car in _cars)
+            car.ShowStats();
+
         while (_cars.Count > 0)
         {
-            this.ShowStats();
+            ShowStats();
             _cars.Peek().ShowStats();
 
             if (Utils.ReadBool("Repair car? Y/N", Accept, NotAccept))
@@ -98,6 +97,7 @@ public class AutoServis
                     {
                         _cars.Peek().ShowStats();
                         _cars.Dequeue();
+
                         return true;
                     }
                 }
@@ -120,10 +120,12 @@ public class AutoServis
                     car.DecreaseMoney(prisePerDetal + prisePerChange);
                     car.RemoveDetail(brokenDetail);
                     car.AddDetail(new DetailAndQuality(newDetail, true));
+
                     return true;
                 }
 
                 Console.WriteLine("Money not enaf for repering first broken detail");
+
                 return false;
             }
         }
@@ -139,7 +141,7 @@ public class AutoServis
     }
 
     private void ShowStats() =>
-        Console.WriteLine($"Ballance autoservis {_money}  Quantity car in enqique {_cars.Count}");
+        Console.WriteLine($"Ballance autoService {_money}  Quantity car in enqique {_cars.Count}");
 }
 
 public class Detail
@@ -184,6 +186,7 @@ public class DetailAndQuantity : Detail
         if (Quantity > 0)
         {
             Quantity--;
+
             return true;
         }
 
@@ -233,6 +236,7 @@ public class DetailList
     public Detail GetRandomDetail()
     {
         Detail detail = _details[Utils.GenerateRandomInt(0, _details.Count())];
+
         return detail.Clone();
     }
 
@@ -272,17 +276,18 @@ public class StoreHouse
                     prisePerDetal = _details[i].Prise;
                     prisePerChange = _details[i].PrisePerChange;
                     detail = _details[i].Clone();
+
                     return true;
                 }
-                else
-                {
-                    Console.WriteLine("Detail is fiend, byt it quantity is zero");
-                    return false;
-                }
+
+                Console.WriteLine("Detail is fiend, byt it quantity is zero");
+
+                return false;
             }
         }
 
         Console.WriteLine("Detail is not fiend");
+
         return false;
     }
 
@@ -405,6 +410,7 @@ public class Car
             if (det.Id == detail.Id)
             {
                 _details.Remove(det);
+
                 return;
             }
         }
@@ -425,11 +431,13 @@ public class Car
             if (detail.IsGoodQuality == false)
             {
                 detailOut = detail.Clone();
+
                 return true;
             }
         }
 
         Console.WriteLine("Broken detail is not present");
+
         return false;
     }
 
@@ -456,7 +464,9 @@ public static class Utils
 
     public static bool GenerateRandomBool()
     {
-        return s_random.Next(2) == 0;
+        int two = 2;
+
+        return s_random.Next(two) == 0;
     }
 
     public static bool ReadBool(string text = "", string yes = "y", string no = "n")

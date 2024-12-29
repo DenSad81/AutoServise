@@ -7,10 +7,10 @@
       <FileName>Program.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="AutoServis" Collapsed="true">
+  <Class Name="AutoService" Collapsed="true">
     <Position X="0.75" Y="7.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AMAAAAAAAAAAAAAAAAgAAAAAAAAAABAAgAAAAAAABAA=</HashCode>
+      <HashCode>AMAAAAAAAAAEACAAAAgAAAAAAAAAABAAgAABAACABAA=</HashCode>
       <FileName>Program.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -24,7 +24,7 @@
   <Class Name="DetailList" Collapsed="true">
     <Position X="6" Y="4.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAABCAAAAAAACAAAAAAAAACAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAAAAAAAAACAAAAAAACAAAAAAAAACAAAAAAAAAAAA=</HashCode>
       <FileName>Program.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -38,7 +38,7 @@
   <Class Name="Car" Collapsed="true">
     <Position X="7" Y="0.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AEAAAAAAAAAAAgACAAgQAACAAAAAAACAAAAFAAAAAAA=</HashCode>
+      <HashCode>AEAQAAAAAAAEAgAAEAAQAACAAAACAACAAAAFAAAEAAA=</HashCode>
       <FileName>Program.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -52,14 +52,14 @@
   <Class Name="DetailAndQuality">
     <Position X="5.25" Y="3.75" Width="3" />
     <TypeIdentifier>
-      <HashCode>AEAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAEAABA=</HashCode>
+      <HashCode>AEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAABA=</HashCode>
       <FileName>Program.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="StoreHouse" Collapsed="true">
     <Position X="10" Y="1.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AEAAIAAAAAAAAAAAgAAAAAAAAAAAAACAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAIAAAAAAAAAAAgAAAAAAAAAAAAACAAAAAAAAAAAA=</HashCode>
       <FileName>Program.cs</FileName>
     </TypeIdentifier>
   </Class>
