@@ -29,41 +29,44 @@ public class AutoServis
     private int _fine = 300;
     private int _monyForDiagnostics = 100;
     private StoreHouse _storeHouse;
-    private List<Car> _cars;
+    private Queue<Car> _cars;
 
     public AutoServis(StoreHouse storeHouse, List<Car> cars)
     {
         _storeHouse = storeHouse;
-        _cars = cars;
+        _cars = new Queue<Car>(cars);
     }
 
     public void Play()
     {
+        const string Y = "y";
+        const string N = "n";
+
         while (_cars.Count > 0)
         {
             this.ShowStats();
-            _cars[0].ShowStats();
+            _cars.Peek().ShowStats();
 
-            if (Utils.ReadBool("Repair car? Y/N"))
+            if (Utils.ReadBool("Repair car? Y/N",Y,N))
             {
-                if (_cars[0].TryGetCopyOfFirstBrokenDetail(out Detail temp) == true)
+                if (_cars.Peek().TryGetCopyOfFirstBrokenDetail(out Detail temp) == true)
                 {
                     bool isChangeDetal = true;
 
                     while (isChangeDetal)
                     {
-                        _cars[0].TryGetCopyOfFirstBrokenDetail(out Detail detail);
+                        _cars.Peek().TryGetCopyOfFirstBrokenDetail(out Detail detail);
                         int detailId = detail.Id;
                         detail.ShowStats();
 
-                        if (Utils.ReadBool("Change detal? Y/N"))
+                        if (Utils.ReadBool("Change detal? Y/N",Y,N))
                         {
                             if (ChangeDetail(detailId))
                                 isChangeDetal = false;
                         }
                         else
                         {
-                            NotChangeDetail(_cars[0].SummAllBrokenDetails);
+                            NotChangeDetail(_cars.Peek().SummAllBrokenDetails);
                             isChangeDetal = false;
                         }
                     }
@@ -85,16 +88,16 @@ public class AutoServis
     {
         if (_storeHouse.CheckIfDetalPresentById(detailId, out int prisePerDetal, out int prisePerChange))
         {
-            if (_cars[0].TruRepairFirstBrokenDetail(prisePerDetal, prisePerChange))
+            if (_cars.Peek().TruRepairFirstBrokenDetail(prisePerDetal, prisePerChange))
             {
                 if (_storeHouse.TryBuyDetalById(detailId))
                 {
                     _money += (prisePerDetal + prisePerChange);
 
-                    if (_cars[0].QuantityBrokenDetails == 0)
+                    if (_cars.Peek().QuantityBrokenDetails == 0)
                     {
-                        _cars[0].ShowStats();
-                        _cars.RemoveAt(0);
+                        _cars.Peek().ShowStats();
+                        _cars.Dequeue();
                         return true;
                     }
                 }
@@ -106,9 +109,9 @@ public class AutoServis
 
     private void NotChangeDetail(int fine)
     {
-        _cars[0].GetFine(fine);
+        _cars.Peek().GetFine(fine);
         _money += fine;
-        _cars.RemoveAt(0);
+        _cars.Dequeue();
     }
 
     private void ShowStats() =>
