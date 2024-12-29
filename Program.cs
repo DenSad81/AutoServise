@@ -47,7 +47,7 @@ public class AutoServis
             this.ShowStats();
             _cars.Peek().ShowStats();
 
-            if (Utils.ReadBool("Repair car? Y/N",Y,N))
+            if (Utils.ReadBool("Repair car? Y/N", Y, N))
             {
                 if (_cars.Peek().TryGetCopyOfFirstBrokenDetail(out Detail temp) == true)
                 {
@@ -59,7 +59,7 @@ public class AutoServis
                         int detailId = detail.Id;
                         detail.ShowStats();
 
-                        if (Utils.ReadBool("Change detal? Y/N",Y,N))
+                        if (Utils.ReadBool("Change detal? Y/N", Y, N))
                         {
                             if (ChangeDetail(detailId))
                                 isChangeDetal = false;
@@ -86,11 +86,11 @@ public class AutoServis
 
     private bool ChangeDetail(int detailId)
     {
-        if (_storeHouse.CheckIfDetalPresentById(detailId, out int prisePerDetal, out int prisePerChange))
+        if (_storeHouse.CheckIfDetalPresentById(detailId, out Detail detail, out int prisePerDetal, out int prisePerChange))
         {
-            if (_cars.Peek().TruRepairFirstBrokenDetail(prisePerDetal, prisePerChange))
+            if (TruChangeFirstBrokenDetail(_cars.Peek(), detail, prisePerDetal, prisePerChange))
             {
-                if (_storeHouse.TryBuyDetalById(detailId))
+                if (_storeHouse.TryBuyDetalById(detailId, out Detail detai))
                 {
                     _money += (prisePerDetal + prisePerChange);
 
@@ -107,13 +107,39 @@ public class AutoServis
         return false;
     }
 
+    private bool TruChangeFirstBrokenDetail(Car car, Detail newDetail, int prisePerDetal, int prisePerChange)
+    {
+        int carMoney = car.Money;
+
+        foreach (var brokenDetail in car.GetCopyOfDetails())
+        {
+            if (brokenDetail.IsGoodQuality == false)
+            {
+                if (carMoney - (prisePerDetal + prisePerChange) >= 0)
+                {
+                    car.DecreaseMoney(prisePerDetal + prisePerChange);
+                    car.RemoveDetail(brokenDetail);
+                    car.AddDetail(new DetailAndQuality(newDetail, true));
+                    return true;
+                }
+                else
+                {
+                    Console.WriteLine("Money not enaf for repering first broken detail");
+                    return false;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private void NotChangeDetail(int fine)
     {
         _cars.Peek().GetFine(fine);
-        _money += fine;
+        _money -= fine;
         _cars.Dequeue();
     }
-
+   
     private void ShowStats() =>
         Console.WriteLine($"Ballance autoservis {_money}  Quantity car in enqique {_cars.Count}");
 }
@@ -189,9 +215,6 @@ public class DetailAndQuality : Detail
 
     public override void ShowStats() =>
     Console.WriteLine($"Type of detail: {Id}  Prise: {Prise}  Prise per change: {PrisePerChange}  Quality: {IsGoodQuality}");
-
-    public void RepeirDetal()
-        => IsGoodQuality = true;
 }
 
 public class DetailList
@@ -242,10 +265,11 @@ public class StoreHouse
             _details.Add(new DetailAndQuantity(detail, quantityDetailsPerPosition));
     }
 
-    public bool CheckIfDetalPresentById(int id, out int prisePerDetal, out int prisePerChange)
+    public bool CheckIfDetalPresentById(int id, out Detail detail, out int prisePerDetal, out int prisePerChange)
     {
         prisePerDetal = 0;
         prisePerChange = 0;
+        detail = null;
 
         for (int i = 0; i < _details.Count; i++)
         {
@@ -255,6 +279,7 @@ public class StoreHouse
                 {
                     prisePerDetal = _details[i].Prise;
                     prisePerChange = _details[i].PrisePerChange;
+                    detail = _details[i].Clone();
                     return true;
                 }
                 else
@@ -269,8 +294,10 @@ public class StoreHouse
         return false;
     }
 
-    public bool TryBuyDetalById(int id)
+    public bool TryBuyDetalById(int id, out Detail detail)
     {
+        detail = null;
+
         for (int i = 0; i < _details.Count; i++)
         {
             if (_details[i].Id == id)
@@ -278,7 +305,10 @@ public class StoreHouse
                 if (_details[i].Quantity > 0)
                 {
                     if (_details[i].DecreaseQuantity())
+                    {
+                        detail = _details[i].Clone();
                         return true;
+                    }
                 }
             }
         }
@@ -333,7 +363,6 @@ public class CarMaker
 public class Car
 {
     private List<DetailAndQuality> _details;
-    private int _money = 1000;
 
     public Car(int carId, List<DetailAndQuality> details)
     {
@@ -342,6 +371,8 @@ public class Car
     }
 
     public int CarId { get; }
+
+    public int Money { get; private set; } = 1000;
 
     public int QuantityBrokenDetails
     {
@@ -371,6 +402,34 @@ public class Car
         }
     }
 
+    public List<DetailAndQuality> GetCopyOfDetails()
+    {
+        List<DetailAndQuality> temp = new List<DetailAndQuality>();
+
+        foreach (var item in _details)
+            temp.Add(item.Clone());
+
+        return temp;
+    }
+
+    public void RemoveDetail(DetailAndQuality detail)
+    {
+        foreach (var det in _details)
+        {
+            if (det.Id == detail.Id)
+            {
+                _details.Remove(det);
+                return;
+            }
+        }
+    }
+
+    public void AddDetail(DetailAndQuality detail)
+    => _details.Add(detail);
+
+    public void DecreaseMoney(int money)
+    => Money -= money;
+
     public bool TryGetCopyOfFirstBrokenDetail(out Detail detailOut)
     {
         detailOut = null;
@@ -388,37 +447,12 @@ public class Car
         return false;
     }
 
-    public bool TruRepairFirstBrokenDetail(int prisePerDetal, int prisePerChange)
-    {
-        int money = _money;
-
-        foreach (var detail in _details)
-        {
-            if (detail.IsGoodQuality == false)
-            {
-                if (money - (prisePerDetal + prisePerChange) >= 0)
-                {
-                    _money -= (prisePerDetal + prisePerChange);
-                    detail.RepeirDetal();
-                    return true;
-                }
-                else
-                {
-                    Console.WriteLine("Money not enaf for repering first broken detail");
-                    return false;
-                }
-            }
-        }
-
-        return false;
-    }
-
     public void GetFine(int fine) =>
-        _money -= fine;
+        Money += fine;
 
     public void ShowStats()
     {
-        Console.WriteLine($"ID car: {CarId}  Ballance car: {_money}");
+        Console.WriteLine($"ID car: {CarId}  Ballance car: {Money}");
 
         foreach (var detail in _details)
             detail.ShowStats();
