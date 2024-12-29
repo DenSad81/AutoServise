@@ -85,7 +85,7 @@ public class AutoService
 
     private bool ChangeDetail(int detailId)
     {
-        if (_storeHouse.CheckIfDetalPresentById(detailId, out Detail detail, out int prisePerDetal, out int prisePerChange))
+        if (_storeHouse.GetIfDetalPresentById(detailId, out Detail detail, out int prisePerDetal, out int prisePerChange))
         {
             if (TruChangeFirstBrokenDetail(_cars.Peek(), detail, prisePerDetal, prisePerChange))
             {
@@ -135,7 +135,7 @@ public class AutoService
 
     private void NotChangeDetail(int fine)
     {
-        _cars.Peek().GetFine(fine);
+        _cars.Peek().IncreaseMoney(fine);
         _money -= fine;
         _cars.Dequeue();
     }
@@ -261,7 +261,7 @@ public class StoreHouse
             _details.Add(new DetailAndQuantity(detail, quantityDetailsPerPosition));
     }
 
-    public bool CheckIfDetalPresentById(int id, out Detail detail, out int prisePerDetal, out int prisePerChange)
+    public bool GetIfDetalPresentById(int id, out Detail detail, out int prisePerDetal, out int prisePerChange)
     {
         prisePerDetal = 0;
         prisePerChange = 0;
@@ -357,11 +357,11 @@ public class Car
 
     public Car(int carId, List<DetailAndQuality> details)
     {
-        CarId = carId;
+        Id = carId;
         _details = details;
     }
 
-    public int CarId { get; }
+    public int Id { get; }
 
     public int Money { get; private set; } = 1000;
 
@@ -419,8 +419,8 @@ public class Car
     public void AddDetail(DetailAndQuality detail)
     => _details.Add(detail);
 
-    public void DecreaseMoney(int money)
-    => Money -= money;
+    public void DecreaseMoney(int money) =>
+        Money -= money;
 
     public bool TryGetCopyOfFirstBrokenDetail(out Detail detailOut)
     {
@@ -441,12 +441,12 @@ public class Car
         return false;
     }
 
-    public void GetFine(int fine) =>
+    public void IncreaseMoney(int fine) =>
         Money += fine;
 
     public void ShowStats()
     {
-        Console.WriteLine($"ID car: {CarId}  Ballance car: {Money}");
+        Console.WriteLine($"ID car: {Id}  Ballance car: {Money}");
 
         foreach (var detail in _details)
             detail.ShowStats();
