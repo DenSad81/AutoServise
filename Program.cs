@@ -9,7 +9,7 @@ class Program
     static void Main(string[] args)
     {
         int qyantityDetails = 111;
-        DetailList detailList = new DetailList(qyantityDetails);
+        ListOfDetails detailList = new ListOfDetails(qyantityDetails);
         StoreHouse storeHouse = new StoreHouse(detailList);
         CarMaker carMaker = new CarMaker(detailList);
         List<Car> cars = carMaker.CreateCars();
@@ -87,11 +87,11 @@ public class AutoService
 
     private bool ChangeDetail(int detailId)
     {
-        if (_storeHouse.GetIfDetalPresentById(detailId, out Detail detail, out int pricePerDetal, out int pricePerChange))
+        if (_storeHouse.GetIfDetalPresentById(detailId, out DetailAndQuantity detailAndQuantity, out int pricePerDetal, out int pricePerChange))
         {
-            if (TryChangeFirstBrokenDetail(_cars.Peek(), detail, pricePerDetal, pricePerChange))
+            if (TryChangeFirstBrokenDetail(_cars.Peek(), detailAndQuantity.Detail, pricePerDetal, pricePerChange))
             {
-                if (_storeHouse.TryBuyDetalById(detailId, out Detail detai))
+                if (_storeHouse.TryBuyDetalById(detailId, out DetailAndQuantity detai))
                 {
                     _money += (pricePerDetal + pricePerChange);
 
@@ -155,22 +155,20 @@ public class Detail
         new Detail(Id, Price, PricePerChange);
 }
 
-public class DetailAndQuantity : Detail
+public class DetailAndQuantity
 {
-    public DetailAndQuantity(int type, int price, int pricePerChange, int quantity) : base(type, price, pricePerChange)
+    public DetailAndQuantity(Detail detail, int quantity)
     {
+        Detail = detail;
         Quantity = quantity;
     }
 
-    public DetailAndQuantity(Detail detail, int quantity) : base(detail.Id, detail.Price, detail.PricePerChange)
-    {
-        Quantity = quantity;
-    }
+    public Detail Detail { get; private set; }
 
     public int Quantity { get; private set; }
 
     public new DetailAndQuantity Clone() =>
-        new DetailAndQuantity(Id, Price, PricePerChange, Quantity);
+        new DetailAndQuantity(Detail, Quantity);
 
     public bool DecreaseQuantity()
     {
@@ -184,36 +182,34 @@ public class DetailAndQuantity : Detail
         return false;
     }
 
-    public override void ShowStats() =>
-      Console.WriteLine($"Type of detail: {Id}  Price: {Price}  Price per change: {PricePerChange}  Quantity: {Quantity}");
+    public void ShowStats() =>
+      Console.WriteLine($"Type of detail: {Detail.Id}  Price: {Detail.Price}  Price per change: {Detail.PricePerChange}  Quantity: {Quantity}");
 }
 
-public class DetailAndQuality : Detail
+public class DetailAndQuality
 {
-    public DetailAndQuality(int type, int price, int pricePerChange, bool quality) : base(type, price, pricePerChange)
+    public DetailAndQuality(Detail detail, bool quality)
     {
+        Detail = detail;
         IsGoodQuality = quality;
     }
 
-    public DetailAndQuality(Detail detail, bool quality) : base(detail.Id, detail.Price, detail.PricePerChange)
-    {
-        IsGoodQuality = quality;
-    }
+    public Detail Detail { get; private set; }
 
     public bool IsGoodQuality { get; private set; }
 
     public new DetailAndQuality Clone() =>
-        new DetailAndQuality(Id, Price, PricePerChange, IsGoodQuality);
+        new DetailAndQuality(Detail, IsGoodQuality);
 
-    public override void ShowStats() =>
-    Console.WriteLine($"Type of detail: {Id}  Price: {Price}  Price per change: {PricePerChange}  Quality: {IsGoodQuality}");
+    public void ShowStats() =>
+    Console.WriteLine($"Type of detail: {Detail.Id}  Price: {Detail.Price}  Price per change: {Detail.PricePerChange}  Quality: {IsGoodQuality}");
 }
 
-public class DetailList
+public class ListOfDetails
 {
     private List<Detail> _details = new List<Detail>();
 
-    public DetailList(int quantityDetails = 99, int minPrice = 50, int maxPrice = 100)
+    public ListOfDetails(int quantityDetails = 99, int minPrice = 50, int maxPrice = 100)
     {
         for (int i = 0; i < quantityDetails; i++)
         {
@@ -244,29 +240,29 @@ public class DetailList
 
 public class StoreHouse
 {
-    private List<DetailAndQuantity> _details = new List<DetailAndQuantity>();
+    private List<DetailAndQuantity> _detailsAndQuantity = new List<DetailAndQuantity>();
 
-    public StoreHouse(DetailList detailList, int quantityDetailsPerPosition = 11)
+    public StoreHouse(ListOfDetails detailList, int quantityDetailsPerPosition = 11)
     {
         foreach (var detail in detailList.GetAllDetails())
-            _details.Add(new DetailAndQuantity(detail, quantityDetailsPerPosition));
+            _detailsAndQuantity.Add(new DetailAndQuantity(detail, quantityDetailsPerPosition));
     }
 
-    public bool GetIfDetalPresentById(int id, out Detail detail, out int pricePerDetal, out int pricePerChange)
+    public bool GetIfDetalPresentById(int id, out DetailAndQuantity detailAndQuantity, out int pricePerDetal, out int pricePerChange)
     {
         pricePerDetal = 0;
         pricePerChange = 0;
-        detail = null;
+        detailAndQuantity = null;
 
-        for (int i = 0; i < _details.Count; i++)
+        for (int i = 0; i < _detailsAndQuantity.Count; i++)
         {
-            if (_details[i].Id == id)
+            if (_detailsAndQuantity[i].Detail.Id == id)
             {
-                if (_details[i].Quantity > 0)
+                if (_detailsAndQuantity[i].Quantity > 0)
                 {
-                    pricePerDetal = _details[i].Price;
-                    pricePerChange = _details[i].PricePerChange;
-                    detail = _details[i].Clone();
+                    pricePerDetal = _detailsAndQuantity[i].Detail.Price;
+                    pricePerChange = _detailsAndQuantity[i].Detail.PricePerChange;
+                    detailAndQuantity = _detailsAndQuantity[i].Clone();
 
                     return true;
                 }
@@ -282,19 +278,19 @@ public class StoreHouse
         return false;
     }
 
-    public bool TryBuyDetalById(int id, out Detail detail)
+    public bool TryBuyDetalById(int id, out DetailAndQuantity detailAndQuantity)
     {
-        detail = null;
+        detailAndQuantity = null;
 
-        for (int i = 0; i < _details.Count; i++)
+        for (int i = 0; i < _detailsAndQuantity.Count; i++)
         {
-            if (_details[i].Id == id)
+            if (_detailsAndQuantity[i].Detail.Id == id)
             {
-                if (_details[i].Quantity > 0)
+                if (_detailsAndQuantity[i].Quantity > 0)
                 {
-                    if (_details[i].DecreaseQuantity())
+                    if (_detailsAndQuantity[i].DecreaseQuantity())
                     {
-                        detail = _details[i].Clone();
+                        detailAndQuantity = _detailsAndQuantity[i].Clone();
                         return true;
                     }
                 }
@@ -310,9 +306,9 @@ public class CarMaker
     private int _quantityCars = 2;
     private int _minQuantityDetailsPerCar = 2;
     private int _maxQuantityDetailsPerCar = 6;
-    private DetailList _detailList;
+    private ListOfDetails _detailList;
 
-    public CarMaker(DetailList detailList)
+    public CarMaker(ListOfDetails detailList)
     {
         _detailList = detailList;
     }
@@ -354,7 +350,7 @@ public class Car
 
     public int Id { get; }
 
-   public int QuantityBrokenDetails
+    public int QuantityBrokenDetails
     {
         get
         {
@@ -376,7 +372,7 @@ public class Car
             int sum = 0;
 
             foreach (var brokenDetail in _details)
-                sum += brokenDetail.Price;
+                sum += brokenDetail.Detail.Price;
 
             return sum;
         }
@@ -392,13 +388,13 @@ public class Car
         return temp;
     }
 
-    public void RemoveDetail(DetailAndQuality detail)
+    public void RemoveDetail(DetailAndQuality detailAndQuality)
     {
-        foreach (var det in _details)
+        foreach (var detail in _details)
         {
-            if (det.Id == detail.Id)
+            if (detail.Detail.Id == detailAndQuality.Detail.Id)
             {
-                _details.Remove(det);
+                _details.Remove(detail);
 
                 return;
             }
@@ -416,7 +412,7 @@ public class Car
         {
             if (detail.IsGoodQuality == false)
             {
-                detailOut = detail.Clone();
+                detailOut = detail.Detail.Clone();
 
                 return true;
             }
