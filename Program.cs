@@ -21,6 +21,9 @@ class Program
 
 public class AutoService
 {
+    private const string Accept = "y";
+    private const string NotAccept = "n";
+
     private int _money = 0;
     private int _fine1 = 300;
     private int _fine2 = 100;
@@ -35,9 +38,6 @@ public class AutoService
 
     public void Play()
     {
-        const string Accept = "y";
-        const string NotAccept = "n";
-
         foreach (var car in _cars)
             car.ShowStats();
 
@@ -48,27 +48,9 @@ public class AutoService
 
             if (Utils.ReadBool("Repair car? Y/N", Accept, NotAccept))
             {
-                if (_cars.Peek().TryGetfFirstBrokenDetail(out Detail temp) == true)
-                {
-                    bool isChangeDetal = true;
-
-                    while (isChangeDetal)
-                    {
-                        _cars.Peek().TryGetfFirstBrokenDetail(out Detail detail);
-                        int detailId = detail.Id;
-                        detail.ShowStats();
-
-                        if (Utils.ReadBool("Change detal? Y/N", Accept, NotAccept))
-                        {
-                            if (ChangeDetail(detailId))
-                                isChangeDetal = false;
-                        }
-                        else
-                        {
-                            DoNotChangeDetail(_cars.Peek().SummAllBrokenDetails);
-                            isChangeDetal = false;
-                        }
-                    }
+                if (_cars.Peek().TryGetFirstBrokenDetail(out Detail temp) == true)
+                {                
+                    CheangeDetail();
                 }
                 else
                 {
@@ -85,7 +67,30 @@ public class AutoService
         ShowStats();
     }
 
-    private bool ChangeDetail(int detailId)
+    private void CheangeDetail()
+    {
+        bool isChangeDetal = true;
+
+        while (isChangeDetal)
+        {
+            _cars.Peek().TryGetFirstBrokenDetail(out Detail detail);
+            int detailId = detail.Id;
+            detail.ShowStats();
+
+            if (Utils.ReadBool("Change detal? Y/N", Accept, NotAccept))
+            {
+                if (TryChangeDetail(detailId))
+                    isChangeDetal = false;
+            }
+            else
+            {
+                DoNotChangeDetail(_cars.Peek().SummAllBrokenDetails);
+                isChangeDetal = false;
+            }
+        }
+    }
+
+    private bool TryChangeDetail(int detailId)
     {
         if (_storeHouse.GetIfDetalPresentById(detailId, out DetailAndQuantity detailAndQuantity, out int pricePerDetal, out int pricePerChange))
         {
@@ -404,7 +409,7 @@ public class Car
     public void AddGoodDetail(DetailAndQuality detail)
     => _details.Add(detail);
 
-    public bool TryGetfFirstBrokenDetail(out Detail detailOut)
+    public bool TryGetFirstBrokenDetail(out Detail detailOut)
     {
         detailOut = null;
 
@@ -425,7 +430,7 @@ public class Car
 
     public void ShowStats()
     {
-        Console.WriteLine($"ID car: {Id}  Ballance car: ########");
+        Console.WriteLine($"ID car: {Id}  Ballance car: @");
 
         foreach (var detail in _details)
             detail.ShowStats();
