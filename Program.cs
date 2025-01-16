@@ -22,8 +22,8 @@ class Program
 public class AutoService
 {
     private int _money = 0;
-    private int _fine = 300;
-    private int _monyForDiagnostics = 100;
+    private int _fine1 = 300;
+    private int _fine2 = 100;
     private StoreHouse _storeHouse;
     private Queue<Car> _cars;
 
@@ -48,13 +48,13 @@ public class AutoService
 
             if (Utils.ReadBool("Repair car? Y/N", Accept, NotAccept))
             {
-                if (_cars.Peek().TryGetCopyOfFirstBrokenDetail(out Detail temp) == true)
+                if (_cars.Peek().TryGetfFirstBrokenDetail(out Detail temp) == true)
                 {
                     bool isChangeDetal = true;
 
                     while (isChangeDetal)
                     {
-                        _cars.Peek().TryGetCopyOfFirstBrokenDetail(out Detail detail);
+                        _cars.Peek().TryGetfFirstBrokenDetail(out Detail detail);
                         int detailId = detail.Id;
                         detail.ShowStats();
 
@@ -73,12 +73,12 @@ public class AutoService
                 else
                 {
                     Console.WriteLine("Broken details is not present");
-                    DoNotChangeDetail(_monyForDiagnostics);
+                    DoNotChangeDetail(_fine2);
                 }
             }
             else
             {
-                DoNotChangeDetail(_fine);
+                DoNotChangeDetail(_fine1);
             }
         }
 
@@ -89,7 +89,7 @@ public class AutoService
     {
         if (_storeHouse.GetIfDetalPresentById(detailId, out DetailAndQuantity detailAndQuantity, out int pricePerDetal, out int pricePerChange))
         {
-            if (TryChangeFirstBrokenDetail(_cars.Peek(), detailAndQuantity.Detail, pricePerDetal, pricePerChange))
+            if (TryChangeFirstBrokenDetail(_cars.Peek(), detailAndQuantity.Detail))
             {
                 if (_storeHouse.TryBuyDetalById(detailId, out DetailAndQuantity detai))
                 {
@@ -109,14 +109,14 @@ public class AutoService
         return false;
     }
 
-    private bool TryChangeFirstBrokenDetail(Car car, Detail newDetail, int pricePerDetal, int pricePerChange)
+    private bool TryChangeFirstBrokenDetail(Car car, Detail detail)
     {
-        foreach (var brokenDetail in car.GetCopyListOfDetails())
+        foreach (var detailAndQuality in car.GetCopyListOfDetails())
         {
-            if (brokenDetail.IsGoodQuality == false)
+            if (detailAndQuality.IsGoodQuality == false)
             {
-                car.RemoveDetail(brokenDetail);
-                car.AddDetail(new DetailAndQuality(newDetail, true));
+                car.RemoveDetail(detailAndQuality);
+                car.AddGoodDetail(new DetailAndQuality(detail, true));
 
                 return true;
             }
@@ -401,10 +401,10 @@ public class Car
         }
     }
 
-    public void AddDetail(DetailAndQuality detail)
+    public void AddGoodDetail(DetailAndQuality detail)
     => _details.Add(detail);
 
-    public bool TryGetCopyOfFirstBrokenDetail(out Detail detailOut)
+    public bool TryGetfFirstBrokenDetail(out Detail detailOut)
     {
         detailOut = null;
 
